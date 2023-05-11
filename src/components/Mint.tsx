@@ -9,9 +9,25 @@ import {useAccountContext} from "../contexts/AccountContext";
 import {useNavigate} from "react-router-dom";
 import axios from "axios";
 import {NFTData} from "./SelectNFT";
-import {ethers} from "ethers";
+import {connectMetaMask} from "../util";
 
+interface SalesInfo {
+    contract_address: string;
+    collection_size: string;
+    end_timestamp: string;
+    price: string;
+    sale_phase: string;
+    sold: string;
+    start_timestamp: string
+}
 
+function divideByTenToEighteen(number: number): string {
+    const numberBigInt = BigInt(Math.floor(number * 1e14));
+    const dividerBigInt = BigInt(10) ** BigInt(18);
+    const resultBigInt = numberBigInt / dividerBigInt;
+    const result = parseFloat(resultBigInt.toString()) / 1e14;
+    return result.toFixed(2);
+}
 
 const {Title, Text} = Typography;
 
@@ -22,11 +38,12 @@ const Mint: React.FC = () => {
     const selectedCard = location.state?.selectedCard as NFTData | undefined;
     const invitationAccount = location.state?.invitationAccount as string | undefined;
     const invitationNftData = location.state?.invitationNftData as NFTData | undefined;
-    console.log("invitationAccount", invitationAccount)
-    console.log("invitationNftData", invitationNftData)
-    console.log("selectedCard", selectedCard)
+    // console.log("invitationAccount", invitationAccount)
+    // console.log("invitationNftData", invitationNftData)
+    // console.log("selectedCard", selectedCard)
 
     const [invitationLink, setInvitationLink] = useState<string | undefined>(undefined);
+    const [salesInfo, setSalesInfo] = useState<SalesInfo | undefined>(undefined);
 
     useEffect(() => {
         const fetchInvitationLink = async () => {
@@ -50,10 +67,47 @@ const Mint: React.FC = () => {
     useEffect(() => {
         console.log('invitationLink', invitationLink);
     }, [invitationLink]);
+
+    useEffect(() => {
+        const fetchSalesInfoData = async () => {
+            try {
+                console.log('fetchSalesInfoData');
+                const response = await axios.get(
+                    process.env.REACT_APP_API_BASE_URL + `/api/v1/sales-info`
+                );
+                console.log('fetchSalesInfoData response.data', response.data);
+                setSalesInfo(response.data.data);
+            } catch (error) {
+                console.error('Error sending request:', error);
+            }
+        };
+        fetchSalesInfoData(); // 在 useEffect 中立即调用一次
+        const intervalId = setInterval(() => {
+            fetchSalesInfoData();
+        }, 2000); // 每两秒钟获取一次数据
+
+        // 在组件卸载时清除定时器
+        return () => {
+            clearInterval(intervalId);
+        };
+    }, []); // 移除 salesInfo 依赖，避免不必要的重新渲染
+
+
+
     const handleMint = async () => {
-        //todo 链接链上，发送mint请求
-        navigate("/nft", {state: {selectedCard, invitationAccount, invitationNftData}})
-    }
+        try {
+            // 检查用户是否连接了钱包
+            if (!window.ethereum) {
+                alert('请先连接钱包！');
+                return;
+            }
+            if (selectedCard !== undefined) {
+                await connectMetaMask(selectedCard.contract, Number(selectedCard.tokenId), account)
+            }
+        } catch (error) {
+            console.error('Mint 错误:', error);
+        }
+    };
 
     const handleSelectNFT = async () => {
         try {
@@ -104,15 +158,15 @@ const Mint: React.FC = () => {
                 </Col>
             </Row>
             <div style={{textAlign: 'center', marginTop: '-3%'}}>
-                <Title level={4}>Stock: 1/30</Title>
-                <Text>Price: Free</Text>
+                <Title level={4}>Stock: {salesInfo?.sold}/ {salesInfo?.collection_size}</Title>
+                <Text>Price: {salesInfo?divideByTenToEighteen(Number(salesInfo.price)):""}</Text>
             </div>
             <div style={{textAlign: 'center', marginTop: 10, marginBottom: '10%'}}>
                 {invitationNftData && selectedCard ? (
                     <Button type="primary" onClick={handleMint}>
                         mint
                     </Button>
-                ):(
+                ) : (
                     invitationLink ? (
                         <>
                             <label>Invitation link: </label>

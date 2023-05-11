@@ -34,6 +34,7 @@ export interface NFTData {
     name: string;
 }
 
+
 export interface InvitationAccount {
     account: string
 }

@@ -1,8 +1,5 @@
 // src/global.d.ts
-import { EthereumProvider } from 'ethereum-protocol';
-
-declare global {
-    interface Window {
-        ethereum?: EthereumProvider;
-    }
+// global.d.ts
+declare interface Window {
+    ethereum: ethers.providers.ExternalProvider;
 }
