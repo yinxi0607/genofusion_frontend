@@ -1,14 +1,14 @@
 // src/components/Mint.tsx
 import React, {useEffect, useState} from 'react';
 import {Row, Col, Typography, Button, Image, Mentions, message} from 'antd';
-import {Link, useLocation} from 'react-router-dom';
+import {useLocation} from 'react-router-dom';
 import rectangleImage1 from '../assets/mint1.png';
 import rectangleImage2 from '../assets/mint2.png';
 import circleImage from '../assets/mint3.png';
 import {useAccountContext} from "../contexts/AccountContext";
 import {useNavigate} from "react-router-dom";
 import axios from "axios";
-import {InitiatorInvitee, NFTData} from "./SelectNFT";
+import {NFTData} from "./SelectNFT";
 import {connectMetaMask} from "../util";
 
 interface SalesInfo {
@@ -55,9 +55,9 @@ const Mint: React.FC = () => {
             if (account && selectedCard) {
 
                 try {
-                    const response = await axios.get(process.env.REACT_APP_API_BASE_URL + '/api/v1//initiator-invite/account/'+account);
+                    const response = await axios.get(process.env.REACT_APP_API_BASE_URL + '/api/v1/initiator-invite/account/'+account);
                     console.log("fetchAllInvitationLink response.data", response.data)
-                    if (response.data.code==200){
+                    if (response.data.code===200){
                         setAllInvitationLink(response.data.data.inviteCode);
                     }else{
                         alert(response.data.message)
@@ -69,7 +69,7 @@ const Mint: React.FC = () => {
             }
         };
         fetchAllInvitationLink();
-    }, []);
+    }, [account]);
 
     useEffect(() => {
         const fetchInvitationLink = async () => {
@@ -83,7 +83,7 @@ const Mint: React.FC = () => {
                             "initiator_image":selectedCard.image,
                         });
                         console.log("fetchInvitationLink response.data", response.data)
-                        if (response.data.code==200){
+                        if (response.data.code===200){
                             setInvitationLink(response.data.data.inviteCode);
                         }else{
                             alert(response.data.message)
@@ -96,7 +96,7 @@ const Mint: React.FC = () => {
         };
 
         fetchInvitationLink();
-    }, []);
+    }, [account]);
 
     useEffect(() => {
         const fetchSalesInfoData = async () => {
