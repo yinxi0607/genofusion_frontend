@@ -8,7 +8,7 @@ import circleImage from '../assets/mint3.png';
 import {useAccountContext} from "../contexts/AccountContext";
 import {useNavigate} from "react-router-dom";
 import axios from "axios";
-import {NFTData} from "./SelectNFT";
+import {InitiatorInvitee, NFTData} from "./SelectNFT";
 import {connectMetaMask} from "../util";
 
 interface SalesInfo {
@@ -19,6 +19,10 @@ interface SalesInfo {
     sale_phase: string;
     sold: string;
     start_timestamp: string
+}
+
+interface allInvitationLinkInterface {
+
 }
 
 function divideByTenToEighteen(number: number): string {
@@ -40,33 +44,59 @@ const Mint: React.FC = () => {
     const invitationNftData = location.state?.invitationNftData as NFTData | undefined;
     // console.log("invitationAccount", invitationAccount)
     // console.log("invitationNftData", invitationNftData)
-    // console.log("selectedCard", selectedCard)
+    console.log("selectedCard", selectedCard)
 
     const [invitationLink, setInvitationLink] = useState<string | undefined>(undefined);
+    const [allInvitationLink, setAllInvitationLink] = useState<allInvitationLinkInterface[] | undefined>(undefined);
     const [salesInfo, setSalesInfo] = useState<SalesInfo | undefined>(undefined);
+
+    useEffect(() => {
+        const fetchAllInvitationLink = async () => {
+            if (account && selectedCard) {
+
+                try {
+                    const response = await axios.get(process.env.REACT_APP_API_BASE_URL + '/api/v1//initiator-invite/account/'+account);
+                    console.log("fetchAllInvitationLink response.data", response.data)
+                    if (response.data.code==200){
+                        setAllInvitationLink(response.data.data.inviteCode);
+                    }else{
+                        alert(response.data.message)
+                    }
+                } catch (error) {
+                    console.error('Error sending request:', error);
+                }
+
+            }
+        };
+        fetchAllInvitationLink();
+    }, []);
 
     useEffect(() => {
         const fetchInvitationLink = async () => {
             if (account && selectedCard) {
-                try {
-                    const response = await axios.post(process.env.REACT_APP_API_BASE_URL + '/api/invitation', {
-                        account,
-                        nft: selectedCard,
-                    });
-                    console.log("mint useEffect response.data", response.data)
-                    console.log("mint useEffect response.data.invitation", response.data.invitation)
-                    setInvitationLink(response.data.data.invitation);
-                } catch (error) {
-                    console.error('Error sending request:', error);
-                }
+
+                    try {
+                        const response = await axios.post(process.env.REACT_APP_API_BASE_URL + '/api/v1/initiator-invite', {
+                            "initiator_contract_address":selectedCard.contract,
+                            "initiator_account_address":account,
+                            "initiator_token_id":String(selectedCard.tokenId),
+                            "initiator_image":selectedCard.image,
+                        });
+                        console.log("fetchInvitationLink response.data", response.data)
+                        if (response.data.code==200){
+                            setInvitationLink(response.data.data.inviteCode);
+                        }else{
+                            alert(response.data.message)
+                        }
+                    } catch (error) {
+                        console.error('Error sending request:', error);
+                    }
+
             }
         };
 
         fetchInvitationLink();
-    }, [account, selectedCard]);
-    useEffect(() => {
-        console.log('invitationLink', invitationLink);
-    }, [invitationLink]);
+    }, []);
 
     useEffect(() => {
         const fetchSalesInfoData = async () => {
@@ -84,7 +114,7 @@ const Mint: React.FC = () => {
         fetchSalesInfoData(); // 在 useEffect 中立即调用一次
         const intervalId = setInterval(() => {
             fetchSalesInfoData();
-        }, 2000); // 每两秒钟获取一次数据
+        }, Number(process.env.REACT_APP_API_SALES_INFO_TIME)); // 每两秒钟获取一次数据
 
         // 在组件卸载时清除定时器
         return () => {
@@ -102,7 +132,34 @@ const Mint: React.FC = () => {
                 return;
             }
             if (selectedCard !== undefined) {
-                await connectMetaMask(selectedCard.contract, Number(selectedCard.tokenId), account)
+
+                if (invitationNftData){
+                    try {
+                        const request1 = axios.put(process.env.REACT_APP_API_BASE_URL + '/api/v1/initiator-invite', {
+                            "initiator_contract_address": selectedCard.contract,
+                            "initiator_account_address": account,
+                            "initiator_token_id": String(selectedCard.tokenId),
+                            "initiator_image": selectedCard.image,
+                            "invitee_contract_address": invitationNftData.contract,
+                            "invitee_account_address": invitationAccount,
+                            "invitee_token_id": String(invitationNftData.tokenId),
+                            "invitee_image": invitationNftData.image,
+                            "used": 1
+                        });
+
+                        const request2 = axios.get(process.env.REACT_APP_API_BASE_URL + '/api/v1/fusion-index?initiator_contract_address=' + invitationNftData.contract + '&initiator_token_id=' + invitationNftData.tokenId);
+
+                        const [response, response_fusion_index] = await Promise.all([request1, request2]);
+
+                        console.log("fetchInvitationLink response.data", response.data);
+                        console.log("fetchInvitationLink response.data", response_fusion_index.data);
+
+                        await connectMetaMask(selectedCard.contract, Number(selectedCard.tokenId), account, response_fusion_index.data.data.fusion_index);
+                    } catch (error) {
+                        console.error('Error sending request:', error);
+                    }
+
+                }
             }
         } catch (error) {
             console.error('Mint 错误:', error);

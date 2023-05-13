@@ -68,7 +68,7 @@ const App: React.FC = () => {
                         <Route path="/" element={<Home />} />
                         <Route path="/mint" element={<Mint/>} />
                         <Route path="/select" element={<SelectNFT/>} />
-                        <Route path="/invitation/*" element={<Invitation />} />
+                        <Route path="/invite/:code" element={<Invitation />} />
                         <Route path="/nft" element={<NFT/>} />
                     </Routes>
                     </AccountContext.Provider>

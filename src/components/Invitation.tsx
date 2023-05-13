@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import {Row, Col, Image, Button} from 'antd';
-import { useLocation,useNavigate } from 'react-router-dom';
+import { useLocation,useNavigate,useParams } from 'react-router-dom';
 import axios from 'axios';
 import {InvitationAccount, NFTData} from './SelectNFT';
 import rectangleImage1 from '../assets/mint1.png';
@@ -11,6 +11,8 @@ import rectangleImage2 from "../assets/mint2.png";
 
 
 const Invitation: React.FC = () => {
+    const params = useParams();
+    const code = params.code;
     const location = useLocation();
     const navigate = useNavigate();
     const invitationLink = location.pathname;
@@ -23,9 +25,16 @@ const Invitation: React.FC = () => {
     useEffect(() => {
         const fetchNftData = async () => {
             try {
-                const response = await axios.get(process.env.REACT_APP_API_BASE_URL+`/api${invitationLink}`);
-                setNftData(response.data.data.nft);
-                setInvitationAccount(response.data.data.account);
+                const response = await axios.get(process.env.REACT_APP_API_BASE_URL+`/api/v1/initiator-invite/${code}`);
+                console.log("fetchNftData response.data", response.data)
+                let nft: NFTData = {
+                    contract: response.data.data.initiator_contract_address,
+                    tokenId: response.data.data.initiator_token_id,
+                    image: response.data.data.initiator_image,
+                    name: "",
+                }
+                setNftData(nft);
+                setInvitationAccount(response.data.data.initiator_account_address);
             } catch (error) {
                 console.error('Error sending request:', error);
             }
