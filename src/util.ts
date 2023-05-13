@@ -1,5 +1,5 @@
 // import {Signer, ethers, BrowserProvider} from "ethers";
-import {Signer,ethers} from "ethers"
+import {ethers} from "ethers"
 import {JsonRpcSigner} from "@ethersproject/providers";
 
 const contractAddress = '0xF5023a04022B6f8a2C95AAd16d430ED2805B928C';

@@ -68,10 +68,11 @@ const SelectNFT: React.FC = () => {
     const location = useLocation();
     const invitationAccount = location.state?.invitationAccount as InvitationAccount | undefined;
     const invitationNftData = location.state?.invitationNftData as NFTData | undefined;
-    console.log('select account', account)
+    console.log("select nft account",account)
     useEffect(() => {
         const fetchData = async () => {
             try {
+                console.log("start fetch nft data")
                 const data = await fetchNFTData(account);
                 if (data.code === 200) {
                     setNftData(data.data);
