@@ -67,7 +67,7 @@ const App: React.FC = () => {
                     <Routes>
                         <Route path="/" element={<Home />} />
                         <Route path="/mint" element={<Mint/>} />
-                        <Route path="/select" element={<SelectNFT/>} />
+                        {/*<Route path="/select" element={<SelectNFT/>} />*/}
                         <Route path="/invite/:code" element={<Invitation />} />
                         <Route path="/nft" element={<NFT/>} />
                     </Routes>
