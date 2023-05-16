@@ -136,9 +136,9 @@ const Mint: React.FC = () => {
 
     const handlePopoverClick = () => {
         // 检查用户是否连接了钱包
-        if (!window.ethereum) {
-            alert('请先连接钱包！');
-            return;
+        if (!account) {
+            alert("Please connect wallet first!")
+            navigate('/', {state: {invitationNftData, invitationAccount}})
         }
         console.log("handlePopoverClick")
         setPopoverVisible(!popoverVisible);
