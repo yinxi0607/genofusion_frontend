@@ -8,6 +8,7 @@ export interface NFTData {
     tokenId: string;
     image: string;
     name: string;
+    used: number;
 }
 
 interface SelectNFTProps {
@@ -57,6 +58,7 @@ const SelectNFT: React.FC<SelectNFTProps> = ({ onSelect }) => {
     useEffect(() => {
         const fetchData = async () => {
             try {
+                console.log("SelectNft account",account)
                 const data = await fetchNFTData(account);
                 if (data.code === 200) {
                     setNftData(data.data);
@@ -65,21 +67,24 @@ const SelectNFT: React.FC<SelectNFTProps> = ({ onSelect }) => {
                 console.error('Error fetching NFT data:', error);
             }
         };
-
-        if (account) {
+        console.log("fetchNFTData")
+        if (account||invitationAccount) {
             fetchData();
         }
-    }, [account]);
+    }, [account, invitationAccount]);
 
     const handleCardClick = (nft: NFTData) => {
+        console.log('nft', nft)
         setSelectedCard(nft);
     };
 
     const handleSelectButtonClick = async () => {
+        console.log('selectedCard', selectedCard)
         if (selectedCard) {
             navigate('/mint', { state: { selectedCard, invitationAccount, invitationNftData } });
             onSelect(); // 调用 onSelect 属性
         } else {
+            console.log('selectedCard else', selectedCard)
             alert('请先选择一个卡片！');
         }
     };

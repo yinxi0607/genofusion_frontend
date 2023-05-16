@@ -4,6 +4,7 @@ import {useAccountContext} from '../contexts/AccountContext';
 import {useNavigate, useLocation} from 'react-router-dom';
 import axios from 'axios';
 import SelectNFT, {NFTData} from './SelectNFT';
+import MintInvitation from "./MintInvitation";
 
 interface SalesInfo {
     contract_address: string;
@@ -15,6 +16,7 @@ interface SalesInfo {
     start_timestamp: string;
 }
 
+
 const popoverContentStyle = {
     width: window.innerWidth * 0.5 + 'px',
     height: window.innerHeight * 0.5 + 'px',
@@ -22,13 +24,13 @@ const popoverContentStyle = {
     overflow: 'auto',
 };
 
-const popoverWrapperStyle: React.CSSProperties  = {
+const popoverWrapperStyle: React.CSSProperties = {
     position: 'relative',
     width: '100%',
     height: '100%',
 };
 
-const popoverStyle: React.CSSProperties  = {
+const popoverStyle: React.CSSProperties = {
     position: 'absolute',
     top: '50%',
     left: '50%',
@@ -52,9 +54,12 @@ const Mint: React.FC = () => {
     const selectedCard = location.state?.selectedCard as NFTData | undefined;
     const invitationAccount = location.state?.invitationAccount as string | undefined;
     const invitationNftData = location.state?.invitationNftData as NFTData | undefined;
+    const startNewOne = location.state?.startNewOne as boolean | undefined;
 
     const [invitationLink, setInvitationLink] = useState<string | undefined>(undefined);
     const [salesInfo, setSalesInfo] = useState<SalesInfo | undefined>(undefined);
+    const [showMintInvitation, setShowMintInvitation] = useState(false);
+    const [allInvitationLink, setAllInvitationLink] = useState<NFTData[]>([]);
 
     const [popoverVisible, setPopoverVisible] = useState(false);
 
@@ -79,9 +84,8 @@ const Mint: React.FC = () => {
                 }
             }
         };
-
         fetchInvitationLink();
-    }, [account]);
+    }, [account,selectedCard]);
 
     useEffect(() => {
         const fetchSalesInfoData = async () => {
@@ -106,129 +110,170 @@ const Mint: React.FC = () => {
         };
     }, []);
 
+    useEffect(() => {
+        // 在此 useEffect 内部检查邀请链接并设置 showMintInvitation 的值
+        const checkInvitationLinks = async () => {
+            if (account) {
+                try {
+                    const response = await axios.get(
+                        `${process.env.REACT_APP_API_BASE_URL}/api/v1/initiator-invite/account/${account}`
+                    );
+
+                    if (response.data.code === 200 && response.data.data.length > 0) {
+                        setShowMintInvitation(true);
+                        setAllInvitationLink(response.data.data)
+                    } else {
+                        setShowMintInvitation(false);
+                    }
+                } catch (error) {
+                    console.error('Error sending request:', error);
+                }
+            }
+        };
+
+        checkInvitationLinks();
+    }, [account]);
+
     const handlePopoverClick = () => {
+        console.log("handlePopoverClick")
         setPopoverVisible(!popoverVisible);
     };
 
     const handleSelectButtonClick = async () => {
+        console.log("handleSelectButtonClick",selectedCard)
         if (selectedCard) {
             navigate('/mint', {state: {selectedCard, invitationAccount, invitationNftData}});
         } else {
-            alert('请先选择一个卡片！');
+            alert('Please Choose One Card！');
         }
+        // setPopoverVisible(false);
+    };
+
+    const handleSelectNFTButtonClick = async () => {
+        console.log("handleSelectNFTButtonClick",selectedCard)
         setPopoverVisible(false);
     };
 
     return (
+
+
         <div>
-            <h1>Mint</h1>
-            <p>This is the Mint page.</p>
-            <Row
-                align="middle"
-                justify="center"
-                style={{
-                    gap: 'calc(100%/10)',
-                    paddingTop: 'calc(100%/20)',
-                    paddingBottom: 'calc(100%/20)',
-                }}
-            >
-                <Col xs={24} md={2}>
-                    <div>
-                        <h2>
-                            Phase 1: Free Mint
-                        </h2>
-                        <p></p>
-                        <p></p>
-                        <p>
-                            Available: {salesInfo?.sold}/{salesInfo?.collection_size}
-                        </p>
-                        <p>
-                            Price: FREE
-                        </p>
-                    </div>
-                </Col>
-                <Col xs={24} md={3}>
-                    <Image
-                        src={
-                            invitationNftData
-                                ? invitationNftData.image.replace('ipfs://', 'https://ipfs.io/ipfs/')
-                                : selectedCard
-                                    ? selectedCard.image.replace('ipfs://', 'https://ipfs.io/ipfs/')
-                                    : 'https://via.placeholder.com/150'
-                        }
-                        alt="Rectangle 1"
-                        style={{width: '100%', height: 'auto'}}
-                    />
-                </Col>
-
-                <Col xs={24} md={3}>
-                    <Image
-                        src={
-                            invitationNftData
-                                ? selectedCard
-                                    ? selectedCard.image.replace('ipfs://', 'https://ipfs.io/ipfs/')
-                                    : 'https://via.placeholder.com/150'
-                                : 'https://via.placeholder.com/150'
-                        }
-                        alt="Rectangle 2"
-                        style={{width: '100%', height: 'auto'}}
-                    />
-                </Col>
-            </Row>
-            <div style={{textAlign: 'center', marginTop: '-3%'}}>
-                <Title level={4}>
-                    Stock: {salesInfo?.sold}/ {salesInfo?.collection_size}
-                </Title>
-                <Text>Price: {salesInfo ? divideByTenToEighteen(Number(salesInfo.price)) : ''}</Text>
-            </div>
-            <div style={{textAlign: 'center', marginTop: 10, marginBottom: '10%'}}>
-                {invitationNftData && selectedCard ? (
-                    <Button type="primary" onClick={handleSelectButtonClick}>
-                        mint
-                    </Button>
-                ) : (
-                    invitationLink ? (
-                        <>
-                            <label>Invitation link: </label>
-                            <Mentions readOnly value={invitationLink} placeholder="邀请链接将在这里显示" style={{width: '20%'}}/>
-                            <Button
-                                type="primary"
-                                style={{marginTop: 8}}
-                                onClick={() => {
-                                    navigator.clipboard.writeText(invitationLink || '');
-                                    message.success('邀请链接已复制到剪贴板');
-                                }}
-                            >
-                                复制邀请链接
-                            </Button>
-                        </>
-                    ) : (
-                        <div style={popoverWrapperStyle}>
-
-
-                            <Popover
-                                content={
-
-                                    <div style={popoverContentStyle}>
-                                        <SelectNFT onSelect={handleSelectButtonClick}/>
-                                    </div>
+            {showMintInvitation && startNewOne ? (
+                <MintInvitation allInvitationLinks={allInvitationLink}/>
+            ):(
+                <div>
+                    <h1>Mint</h1>
+                    <p>This is the Mint page.</p>
+                    <Row
+                        align="middle"
+                        justify="center"
+                        style={{
+                            gap: 'calc(100%/10)',
+                            paddingTop: 'calc(100%/20)',
+                            paddingBottom: 'calc(100%/20)',
+                        }}
+                    >
+                        <Col xs={24} md={2}>
+                            <div>
+                                <h2>
+                                    Phase 1: Free Mint
+                                </h2>
+                                <p></p>
+                                <p></p>
+                                <p>
+                                    Available: {salesInfo?.sold}/{salesInfo?.collection_size}
+                                </p>
+                                <p>
+                                    Price: FREE
+                                </p>
+                            </div>
+                        </Col>
+                        <Col xs={24} md={3}>
+                            <Image
+                                src={
+                                    invitationNftData
+                                        ? invitationNftData.image.replace('ipfs://', 'https://ipfs.io/ipfs/')
+                                        : selectedCard
+                                            ? selectedCard.image.replace('ipfs://', 'https://ipfs.io/ipfs/')
+                                            : 'https://via.placeholder.com/150'
                                 }
-                                title="选择一个 NFT"
-                                trigger="click"
-                                visible={popoverVisible}
-                                onVisibleChange={setPopoverVisible}
-                                // placement="top"
-                                transitionName=""
-                                overlayStyle={popoverStyle}
-                            >
-                                <Button type="primary" onClick={handlePopoverClick}>
-                                    Select Your NFT
-                                </Button>
-                            </Popover>
-                        </div>
-                    ))}
-            </div>
+                                alt="Rectangle 1"
+                                style={{width: '100%', height: 'auto'}}
+                            />
+                        </Col>
+
+                        <Col xs={24} md={3}>
+                            <Image
+                                src={
+                                    invitationNftData
+                                        ? selectedCard
+                                            ? selectedCard.image.replace('ipfs://', 'https://ipfs.io/ipfs/')
+                                            : 'https://via.placeholder.com/150'
+                                        : 'https://via.placeholder.com/150'
+                                }
+                                alt="Rectangle 2"
+                                style={{width: '100%', height: 'auto'}}
+                            />
+                        </Col>
+                    </Row>
+                    <div style={{textAlign: 'center', marginTop: '-3%'}}>
+                        <Title level={4}>
+                            Stock: {salesInfo?.sold}/ {salesInfo?.collection_size}
+                        </Title>
+                        <Text>Price: {salesInfo ? divideByTenToEighteen(Number(salesInfo.price)) : ''}</Text>
+                    </div>
+                    <div style={{textAlign: 'center', marginTop: 10, marginBottom: '10%'}}>
+                        {invitationNftData && selectedCard ? (
+                            <Button type="primary" onClick={handleSelectButtonClick}>
+                                mint
+                            </Button>
+                        ) : (
+                            invitationLink ? (
+                                <>
+                                    <label>Invitation link: </label>
+                                    <Mentions readOnly value={invitationLink} placeholder="邀请链接将在这里显示" style={{width: '20%'}}/>
+                                    <Button
+                                        type="primary"
+                                        style={{marginTop: 8}}
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(invitationLink || '');
+                                            message.success('邀请链接已复制到剪贴板');
+                                        }}
+                                    >
+                                        复制邀请链接
+                                    </Button>
+                                </>
+                            ) : (
+                                <div style={popoverWrapperStyle}>
+
+
+                                    <Popover
+                                        content={
+
+                                            <div style={popoverContentStyle}>
+                                                <SelectNFT onSelect={handleSelectNFTButtonClick}/>
+                                            </div>
+                                        }
+                                        title="选择一个 NFT"
+                                        trigger="click"
+                                        visible={popoverVisible}
+                                        onVisibleChange={setPopoverVisible}
+                                        // placement="top"
+                                        transitionName=""
+                                        overlayStyle={popoverStyle}
+                                    >
+                                        <Button type="primary" onClick={handlePopoverClick}>
+                                            Select Your NFT
+                                        </Button>
+                                    </Popover>
+                                </div>
+                            ))}
+                    </div>
+                </div>
+            )}
+
         </div>
+
     );
 };
 

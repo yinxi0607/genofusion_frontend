@@ -32,6 +32,7 @@ const Invitation: React.FC = () => {
                     tokenId: response.data.data.initiator_token_id,
                     image: response.data.data.initiator_image,
                     name: "",
+                    used:0
                 }
                 setNftData(nft);
                 setInvitationAccount(response.data.data.initiator_account_address);
