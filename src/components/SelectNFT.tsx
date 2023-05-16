@@ -81,7 +81,8 @@ const SelectNFT: React.FC<SelectNFTProps> = ({ onSelect }) => {
     const handleSelectButtonClick = async () => {
         console.log('selectedCard', selectedCard)
         if (selectedCard) {
-            navigate('/mint', { state: { selectedCard, invitationAccount, invitationNftData } });
+            const startNewOne = true
+            navigate('/mint', { state: { selectedCard, invitationAccount, invitationNftData,startNewOne } });
             onSelect(); // 调用 onSelect 属性
         } else {
             console.log('selectedCard else', selectedCard)

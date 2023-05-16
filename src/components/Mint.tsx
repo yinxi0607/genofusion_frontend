@@ -4,8 +4,10 @@ import {useAccountContext} from '../contexts/AccountContext';
 import {useNavigate, useLocation} from 'react-router-dom';
 import axios from 'axios';
 import SelectNFT, {NFTData} from './SelectNFT';
-import MintInvitation from "./MintInvitation";
+import MintInvitation, {MintInvitationInterface} from "./MintInvitation";
 import {connectMetaMask} from "../util";
+import mint1 from '../assets/mint1.png';
+import mint2 from '../assets/mint2.png';
 
 interface SalesInfo {
     contract_address: string;
@@ -60,13 +62,13 @@ const Mint: React.FC = () => {
     const [invitationLink, setInvitationLink] = useState<string | undefined>(undefined);
     const [salesInfo, setSalesInfo] = useState<SalesInfo | undefined>(undefined);
     const [showMintInvitation, setShowMintInvitation] = useState(false);
-    const [allInvitationLink, setAllInvitationLink] = useState<NFTData[]>([]);
+    const [allInvitationLink, setAllInvitationLink] = useState<MintInvitationInterface[]>([]);
 
     const [popoverVisible, setPopoverVisible] = useState(false);
 
     useEffect(() => {
         const fetchInvitationLink = async () => {
-            if (account && selectedCard) {
+            if (account && selectedCard && !invitationAccount) {
                 try {
                     const response = await axios.post(process.env.REACT_APP_API_BASE_URL + '/api/v1/initiator-invite', {
                         "initiator_contract_address": selectedCard.contract,
@@ -86,7 +88,7 @@ const Mint: React.FC = () => {
             }
         };
         fetchInvitationLink();
-    }, [account,selectedCard]);
+    }, [selectedCard]);
 
     useEffect(() => {
         const fetchSalesInfoData = async () => {
@@ -119,8 +121,9 @@ const Mint: React.FC = () => {
                     const response = await axios.get(
                         `${process.env.REACT_APP_API_BASE_URL}/api/v1/initiator-invite/account/${account}`
                     );
-
+                    // console.log("checkInvitationLinks response.data", response.data)
                     if (response.data.code === 200 && response.data.data.length > 0) {
+                        console.log("checkInvitationLinks response.data.data", response.data.data)
                         setShowMintInvitation(true);
                         setAllInvitationLink(response.data.data)
                     } else {
@@ -139,7 +142,7 @@ const Mint: React.FC = () => {
         // 检查用户是否连接了钱包
         if (!account) {
             alert("Please connect wallet first!")
-            navigate('/', {state: {invitationNftData, invitationAccount}})
+            navigate('/', {state: {invitationNftData, invitationAccount,startNewOne}});
         }
         console.log("handlePopoverClick")
         setPopoverVisible(!popoverVisible);
@@ -172,14 +175,14 @@ const Mint: React.FC = () => {
                 if (invitationNftData){
                     try {
                         const request1 = axios.put(process.env.REACT_APP_API_BASE_URL + '/api/v1/initiator-invite', {
-                            "initiator_contract_address": selectedCard.contract,
-                            "initiator_account_address": account,
-                            "initiator_token_id": String(selectedCard.tokenId),
-                            "initiator_image": selectedCard.image,
-                            "invitee_contract_address": invitationNftData.contract,
-                            "invitee_account_address": invitationAccount,
-                            "invitee_token_id": String(invitationNftData.tokenId),
-                            "invitee_image": invitationNftData.image,
+                            "initiator_contract_address": invitationNftData.contract,
+                            "initiator_account_address": invitationAccount,
+                            "initiator_token_id": String(invitationNftData.tokenId),
+                            "initiator_image": invitationNftData.image,
+                            "invitee_contract_address": selectedCard.contract,
+                            "invitee_account_address": account,
+                            "invitee_token_id": String(selectedCard.tokenId),
+                            "invitee_image": selectedCard.image,
                             "used": 1
                         });
 
@@ -219,10 +222,8 @@ const Mint: React.FC = () => {
     };
 
     return (
-
-
         <div>
-            {showMintInvitation && startNewOne ? (
+            {showMintInvitation && !startNewOne ? (
                 <MintInvitation allInvitationLinks={allInvitationLink}/>
             ):(
                 <div>
@@ -237,16 +238,32 @@ const Mint: React.FC = () => {
                             paddingBottom: 'calc(100%/20)',
                         }}
                     >
-                        <Col xs={24} md={2}>
-                            <div>
-                                <h2>
+                        <Col xs={40} md={4}>
+                            <div style={{
+                                fontSize: '200%',
+                                color: '#913E21',
+                            }}>
+                                <h1>
                                     Phase 1: Free Mint
-                                </h2>
-                                <p></p>
-                                <p></p>
+                                </h1>
+
+
+                            </div>
+                            <div style={{
+                                marginTop: '20%',
+                                alignItems: 'initial',
+                                fontSize: '160%',
+                                color: '#913E21',
+                            }}>
                                 <p>
                                     Available: {salesInfo?.sold}/{salesInfo?.collection_size}
                                 </p>
+                            </div>
+                            <div style={{
+                                marginTop: '10%',
+                                fontSize: '160%',
+                                color: '#913E21',
+                            }}>
                                 <p>
                                     Price: FREE
                                 </p>
@@ -259,7 +276,7 @@ const Mint: React.FC = () => {
                                         ? invitationNftData.image.replace('ipfs://', 'https://ipfs.io/ipfs/')
                                         : selectedCard
                                             ? selectedCard.image.replace('ipfs://', 'https://ipfs.io/ipfs/')
-                                            : 'https://via.placeholder.com/150'
+                                            : mint1
                                 }
                                 alt="Rectangle 1"
                                 style={{width: '100%', height: 'auto'}}
@@ -272,8 +289,8 @@ const Mint: React.FC = () => {
                                     invitationNftData
                                         ? selectedCard
                                             ? selectedCard.image.replace('ipfs://', 'https://ipfs.io/ipfs/')
-                                            : 'https://via.placeholder.com/150'
-                                        : 'https://via.placeholder.com/150'
+                                            : mint2
+                                        : mint2
                                 }
                                 alt="Rectangle 2"
                                 style={{width: '100%', height: 'auto'}}

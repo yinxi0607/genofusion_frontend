@@ -4,6 +4,7 @@ import {Button, Image, message} from 'antd';
 import { Web3Provider, JsonRpcSigner } from '@ethersproject/providers';
 import {useAccountContext} from "../contexts/AccountContext";
 import {useLocation,useNavigate} from "react-router-dom";
+import ConnectButton from "./ConnectButton";
 
 
 
@@ -25,7 +26,8 @@ const Home: React.FC = () => {
         if(invitationAccount){
             message.success('three seconds to jump to the mint page');
             const timer = setTimeout(() => {
-                navigate('/mint', { state: { invitationNftData, invitationAccount } });
+                const startNewOne = true
+                navigate('/mint', { state: { invitationNftData, invitationAccount,startNewOne } });
             }, 3000);
 
             return () => {
@@ -80,15 +82,44 @@ const Home: React.FC = () => {
                     {account ? (
                         <>
                             <p>Connected Account: {account}</p>
-                            <Button type="primary" onClick={disconnectWallet}>
-                                Disconnect Wallet
-                            </Button>
+                            {/*<Button type="primary" onClick={disconnectWallet}>*/}
+                            {/*    Disconnect Wallet*/}
+                            {/*</Button>*/}
+                            <ConnectButton text={"Disconnect Wallet"} onClick={disconnectWallet} style={{
+                                backgroundColor: '#AE887B',
+                                color: '#fff',
+                                border: 'none',
+                                borderRadius: '5px',
+                                width: '80%',
+                                height: '70%',
+                                fontSize: '30px',
+                                // marginLeft: '-40%',
+                                // padding: '5px 10px',
+                            }}/>
                         </>
                     ) : (
-                        <Button type="primary" onClick={connectWallet}>
-                            Connect Wallet
-                        </Button>
+                        // <Button type="primary" onClick={connectWallet}>
+                        //     Connect Wallet
+                        // </Button>
+                        <ConnectButton text={"Connect Wallet"} onClick={connectWallet} style={{
+
+                            backgroundColor: '#AE887B',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '5px',
+                            width: '180%',
+                            height: '150%',
+                            fontSize: '30px',
+                            marginLeft: '-40%',
+                            // padding: '5px 10px',
+
+                        }}/>
                     )}
+                </div>
+                <div style={{
+                    marginTop: '-5%',
+                }}>
+                    Disclaimer: Connecting your wallet is only for detecting NFT in the address, and it will not cause any risks.
                 </div>
             </div>
         </div>
