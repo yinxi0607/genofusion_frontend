@@ -135,6 +135,11 @@ const Mint: React.FC = () => {
     }, [account]);
 
     const handlePopoverClick = () => {
+        // 检查用户是否连接了钱包
+        if (!window.ethereum) {
+            alert('请先连接钱包！');
+            return;
+        }
         console.log("handlePopoverClick")
         setPopoverVisible(!popoverVisible);
     };
