@@ -1,6 +1,5 @@
 import React, {useEffect, useState} from 'react';
 import {Row, Col, Button, List} from 'antd';
-import {useAccountContext} from '../contexts/AccountContext';
 import {useNavigate} from 'react-router-dom';
 import axios from 'axios';
 import {NFTData} from "./SelectNFT";
@@ -21,7 +20,7 @@ interface MintInvitationProps {
 }
 
 const MintInvitation: React.FC<MintInvitationProps> = ({allInvitationLinks}) => {
-    const {account} = useAccountContext();
+    // const {account} = useAccountContext();
     const navigate = useNavigate();
 
     const [salesInfo, setSalesInfo] = useState<SalesInfo | undefined>(undefined);

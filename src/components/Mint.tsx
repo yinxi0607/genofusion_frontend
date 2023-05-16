@@ -5,6 +5,7 @@ import {useNavigate, useLocation} from 'react-router-dom';
 import axios from 'axios';
 import SelectNFT, {NFTData} from './SelectNFT';
 import MintInvitation from "./MintInvitation";
+import {connectMetaMask} from "../util";
 
 interface SalesInfo {
     contract_address: string;
@@ -144,19 +145,77 @@ const Mint: React.FC = () => {
         setPopoverVisible(!popoverVisible);
     };
 
-    const handleSelectButtonClick = async () => {
-        console.log("handleSelectButtonClick",selectedCard)
-        if (selectedCard) {
-            navigate('/mint', {state: {selectedCard, invitationAccount, invitationNftData}});
-        } else {
-            alert('Please Choose One Card！');
-        }
-        // setPopoverVisible(false);
-    };
+    // const handleSelectButtonClick = async () => {
+    //     console.log("handleSelectButtonClick",selectedCard)
+    //     if (selectedCard) {
+    //         navigate('/mint', {state: {selectedCard, invitationAccount, invitationNftData}});
+    //     } else {
+    //         alert('Please Choose One Card！');
+    //     }
+    //     // setPopoverVisible(false);
+    // };
 
     const handleSelectNFTButtonClick = async () => {
         console.log("handleSelectNFTButtonClick",selectedCard)
         setPopoverVisible(false);
+    };
+
+    const handleMint = async () => {
+        try {
+            // 检查用户是否连接了钱包
+            if (!window.ethereum) {
+                alert('请先连接钱包！');
+                return;
+            }
+            if (selectedCard !== undefined) {
+
+                if (invitationNftData){
+                    try {
+                        const request1 = axios.put(process.env.REACT_APP_API_BASE_URL + '/api/v1/initiator-invite', {
+                            "initiator_contract_address": selectedCard.contract,
+                            "initiator_account_address": account,
+                            "initiator_token_id": String(selectedCard.tokenId),
+                            "initiator_image": selectedCard.image,
+                            "invitee_contract_address": invitationNftData.contract,
+                            "invitee_account_address": invitationAccount,
+                            "invitee_token_id": String(invitationNftData.tokenId),
+                            "invitee_image": invitationNftData.image,
+                            "used": 1
+                        });
+
+                        const request2 = axios.get(process.env.REACT_APP_API_BASE_URL + '/api/v1/fusion-index?initiator_contract_address=' + invitationNftData.contract + '&initiator_token_id=' + invitationNftData.tokenId);
+
+                        const [response, response_fusion_index] = await Promise.all([request1, request2]);
+                        const expiretAt = Math.floor(Date.now() / 1000)+600;
+                        if(response.data.code === 200 && response_fusion_index.data.code === 200) {
+                            console.log("fetchInvitationLink response.data", response.data);
+                            console.log("fetchInvitationLink response.data", response_fusion_index.data);
+                            const backendSignParams ={
+                                "proposer_contract_address": selectedCard.contract,
+                                "proposer_address": account,
+                                "proposer_token_id": Number(selectedCard.tokenId),
+                                "expire_at": expiretAt,
+                                "fusion_index": response_fusion_index.data.data.fusion_index
+                            }
+                            console.log("backendSignParams",backendSignParams)
+                            const contractSign = await axios.post(process.env.REACT_APP_API_BASE_URL + '/api/v1/sign',backendSignParams )
+                            if (contractSign.data.code===200){
+                                console.log("contractSign.data.data",contractSign.data.data)
+                                await connectMetaMask(expiretAt,contractSign.data.data, selectedCard.contract, Number(selectedCard.tokenId), account, response_fusion_index.data.data.fusion_index);
+                            }
+
+                        }else{
+                            alert("Network Error")
+                        }
+                    } catch (error) {
+                        console.error('Error sending request:', error);
+                    }
+
+                }
+            }
+        } catch (error) {
+            console.error('Mint 错误:', error);
+        }
     };
 
     return (
@@ -229,7 +288,7 @@ const Mint: React.FC = () => {
                     </div>
                     <div style={{textAlign: 'center', marginTop: 10, marginBottom: '10%'}}>
                         {invitationNftData && selectedCard ? (
-                            <Button type="primary" onClick={handleSelectButtonClick}>
+                            <Button type="primary" onClick={handleMint}>
                                 mint
                             </Button>
                         ) : (

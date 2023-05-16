@@ -5,7 +5,6 @@ import {Avatar, Layout, Menu} from 'antd';
 import Home from './components/Home';
 import Mint from './components/Mint';
 import AccountContext from './contexts/AccountContext';
-import SelectNFT from './components/SelectNFT';
 import logo from './assets/logo.png';
 import './App.css';
 import Invitation from "./components/Invitation";
