@@ -5,13 +5,14 @@ import {Avatar, Layout, Menu} from 'antd';
 import Home from './components/Home';
 import Mint from './components/Mint';
 import AccountContext from './contexts/AccountContext';
-import SelectNFT from './components/SelectNFT';
 import logo from './assets/logo.png';
 import './App.css';
 import Invitation from "./components/Invitation";
 import NFT from "./components/NFT";
 import twitterImage from "./assets/twitter1.png";
 import discordImage from "./assets/discord1.png";
+import MintInvitation from "./components/MintInvitation";
+import MintMatched from "./components/MintMatched";
 
 const { Header, Content } = Layout;
 
@@ -67,9 +68,11 @@ const App: React.FC = () => {
                     <Routes>
                         <Route path="/" element={<Home />} />
                         <Route path="/mint" element={<Mint/>} />
-                        <Route path="/select" element={<SelectNFT/>} />
+                        {/*<Route path="/select" element={<SelectNFT/>} />*/}
                         <Route path="/invite/:code" element={<Invitation />} />
+                        <Route path="/matched" element={<MintMatched/>} />
                         <Route path="/nft" element={<NFT/>} />
+
                     </Routes>
                     </AccountContext.Provider>
                 </Content>

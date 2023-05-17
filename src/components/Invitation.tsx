@@ -6,8 +6,6 @@ import { useLocation,useNavigate,useParams } from 'react-router-dom';
 import axios from 'axios';
 import {InvitationAccount, NFTData} from './SelectNFT';
 import rectangleImage1 from '../assets/mint1.png';
-import circleImage from '../assets/mint3.png';
-import rectangleImage2 from "../assets/mint2.png";
 
 
 const Invitation: React.FC = () => {
@@ -32,6 +30,7 @@ const Invitation: React.FC = () => {
                     tokenId: response.data.data.initiator_token_id,
                     image: response.data.data.initiator_image,
                     name: "",
+                    used:0
                 }
                 setNftData(nft);
                 setInvitationAccount(response.data.data.initiator_account_address);
