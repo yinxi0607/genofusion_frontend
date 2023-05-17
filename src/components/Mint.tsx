@@ -21,8 +21,10 @@ interface SalesInfo {
 
 
 const popoverContentStyle = {
-    width: window.innerWidth * 0.5 + 'px',
-    height: window.innerHeight * 0.5 + 'px',
+    // width: window.innerWidth * 0.6 + 'px',
+    // height: window.innerHeight * 0.6 + 'px',
+    width: '60vw',
+    height: '60vh',
     background: '#F0DED0',
     overflow: 'auto',
 };
@@ -58,6 +60,7 @@ const Mint: React.FC = () => {
     const invitationAccount = location.state?.invitationAccount as string | undefined;
     const invitationNftData = location.state?.invitationNftData as NFTData | undefined;
     const startNewOne = location.state?.startNewOne as boolean | undefined;
+    const closeClick = location.state?.closeClick as boolean | undefined;
 
     const [invitationLink, setInvitationLink] = useState<string | undefined>(undefined);
     const [salesInfo, setSalesInfo] = useState<SalesInfo | undefined>(undefined);
@@ -68,22 +71,25 @@ const Mint: React.FC = () => {
 
     useEffect(() => {
         const fetchInvitationLink = async () => {
-            if (account && selectedCard && !invitationAccount) {
-                try {
-                    const response = await axios.post(process.env.REACT_APP_API_BASE_URL + '/api/v1/initiator-invite', {
-                        "initiator_contract_address": selectedCard.contract,
-                        "initiator_account_address": account,
-                        "initiator_token_id": String(selectedCard.tokenId),
-                        "initiator_image": selectedCard.image,
-                    });
-                    console.log("fetchInvitationLink response.data", response.data);
-                    if (response.data.code === 200) {
-                        setInvitationLink(response.data.data.inviteCode);
-                    } else {
-                        alert(response.data.message);
+            console.log("closeClick:", closeClick)
+            if (closeClick == undefined || closeClick == false) {
+                if (account && selectedCard && !invitationAccount) {
+                    try {
+                        const response = await axios.post(process.env.REACT_APP_API_BASE_URL + '/api/v1/initiator-invite', {
+                            "initiator_contract_address": selectedCard.contract,
+                            "initiator_account_address": account,
+                            "initiator_token_id": String(selectedCard.tokenId),
+                            "initiator_image": selectedCard.image,
+                        });
+                        console.log("fetchInvitationLink response.data", response.data);
+                        if (response.data.code === 200) {
+                            setInvitationLink(response.data.data.inviteCode);
+                        } else {
+                            alert(response.data.message);
+                        }
+                    } catch (error) {
+                        console.error('Error sending request:', error);
                     }
-                } catch (error) {
-                    console.error('Error sending request:', error);
                 }
             }
         };
@@ -142,7 +148,7 @@ const Mint: React.FC = () => {
         // 检查用户是否连接了钱包
         if (!account) {
             alert("Please connect wallet first!")
-            navigate('/', {state: {invitationNftData, invitationAccount,startNewOne}});
+            navigate('/', {state: {invitationNftData, invitationAccount, startNewOne}});
         }
         console.log("handlePopoverClick")
         setPopoverVisible(!popoverVisible);
@@ -159,7 +165,7 @@ const Mint: React.FC = () => {
     // };
 
     const handleSelectNFTButtonClick = async () => {
-        console.log("handleSelectNFTButtonClick",selectedCard)
+        console.log("handleSelectNFTButtonClick", selectedCard)
         setPopoverVisible(false);
     };
 
@@ -172,7 +178,7 @@ const Mint: React.FC = () => {
             }
             if (selectedCard !== undefined) {
 
-                if (invitationNftData){
+                if (invitationNftData) {
                     try {
                         const request1 = axios.put(process.env.REACT_APP_API_BASE_URL + '/api/v1/initiator-invite', {
                             "initiator_contract_address": invitationNftData.contract,
@@ -189,25 +195,25 @@ const Mint: React.FC = () => {
                         const request2 = axios.get(process.env.REACT_APP_API_BASE_URL + '/api/v1/fusion-index?initiator_contract_address=' + invitationNftData.contract + '&initiator_token_id=' + invitationNftData.tokenId);
 
                         const [response, response_fusion_index] = await Promise.all([request1, request2]);
-                        const expiretAt = Math.floor(Date.now() / 1000)+600;
-                        if(response.data.code === 200 && response_fusion_index.data.code === 200) {
+                        const expiretAt = Math.floor(Date.now() / 1000) + 600;
+                        if (response.data.code === 200 && response_fusion_index.data.code === 200) {
                             console.log("fetchInvitationLink response.data", response.data);
                             console.log("fetchInvitationLink response.data", response_fusion_index.data);
-                            const backendSignParams ={
+                            const backendSignParams = {
                                 "proposer_contract_address": selectedCard.contract,
                                 "proposer_address": account,
                                 "proposer_token_id": Number(selectedCard.tokenId),
                                 "expire_at": expiretAt,
                                 "fusion_index": response_fusion_index.data.data.fusion_index
                             }
-                            console.log("backendSignParams",backendSignParams)
-                            const contractSign = await axios.post(process.env.REACT_APP_API_BASE_URL + '/api/v1/sign',backendSignParams )
-                            if (contractSign.data.code===200){
-                                console.log("contractSign.data.data",contractSign.data.data)
-                                await connectMetaMask(expiretAt,contractSign.data.data, selectedCard.contract, Number(selectedCard.tokenId), account, response_fusion_index.data.data.fusion_index);
+                            console.log("backendSignParams", backendSignParams)
+                            const contractSign = await axios.post(process.env.REACT_APP_API_BASE_URL + '/api/v1/sign', backendSignParams)
+                            if (contractSign.data.code === 200) {
+                                console.log("contractSign.data.data", contractSign.data.data)
+                                await connectMetaMask(expiretAt, contractSign.data.data, selectedCard.contract, Number(selectedCard.tokenId), account, response_fusion_index.data.data.fusion_index);
                             }
 
-                        }else{
+                        } else {
                             alert("Network Error")
                         }
                     } catch (error) {
@@ -225,7 +231,7 @@ const Mint: React.FC = () => {
         <div>
             {showMintInvitation && !startNewOne ? (
                 <MintInvitation allInvitationLinks={allInvitationLink}/>
-            ):(
+            ) : (
                 <div>
                     <h1>Mint</h1>
                     <p>This is the Mint page.</p>
@@ -240,7 +246,7 @@ const Mint: React.FC = () => {
                     >
                         <Col xs={40} md={4}>
                             <div style={{
-                                fontSize: '200%',
+                                fontSize: '1vw',
                                 color: '#913E21',
                             }}>
                                 <h1>
@@ -252,7 +258,7 @@ const Mint: React.FC = () => {
                             <div style={{
                                 marginTop: '20%',
                                 alignItems: 'initial',
-                                fontSize: '160%',
+                                fontSize: '0.9vw',
                                 color: '#913E21',
                             }}>
                                 <p>
@@ -261,7 +267,7 @@ const Mint: React.FC = () => {
                             </div>
                             <div style={{
                                 marginTop: '10%',
-                                fontSize: '160%',
+                                fontSize: '0.9vw',
                                 color: '#913E21',
                             }}>
                                 <p>
@@ -279,7 +285,7 @@ const Mint: React.FC = () => {
                                             : mint1
                                 }
                                 alt="Rectangle 1"
-                                style={{width: '100%', height: 'auto'}}
+                                style={{width: '15vw', height: 'auto'}}
                             />
                         </Col>
 
@@ -293,7 +299,7 @@ const Mint: React.FC = () => {
                                         : mint2
                                 }
                                 alt="Rectangle 2"
-                                style={{width: '100%', height: 'auto'}}
+                                style={{width: '15vw', height: 'auto'}}
                             />
                         </Col>
                     </Row>
@@ -312,7 +318,8 @@ const Mint: React.FC = () => {
                             invitationLink ? (
                                 <>
                                     <label>Invitation link: </label>
-                                    <Mentions readOnly value={invitationLink} placeholder="邀请链接将在这里显示" style={{width: '20%'}}/>
+                                    <Mentions readOnly value={invitationLink} placeholder="邀请链接将在这里显示"
+                                              style={{width: '20%'}}/>
                                     <Button
                                         type="primary"
                                         style={{marginTop: 8}}
@@ -335,7 +342,7 @@ const Mint: React.FC = () => {
                                                 <SelectNFT onSelect={handleSelectNFTButtonClick}/>
                                             </div>
                                         }
-                                        title="选择一个 NFT"
+                                        // title="选择一个 NFT"
                                         trigger="click"
                                         visible={popoverVisible}
                                         onVisibleChange={setPopoverVisible}

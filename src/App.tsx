@@ -11,6 +11,8 @@ import Invitation from "./components/Invitation";
 import NFT from "./components/NFT";
 import twitterImage from "./assets/twitter1.png";
 import discordImage from "./assets/discord1.png";
+import MintInvitation from "./components/MintInvitation";
+import MintMatched from "./components/MintMatched";
 
 const { Header, Content } = Layout;
 
@@ -68,7 +70,9 @@ const App: React.FC = () => {
                         <Route path="/mint" element={<Mint/>} />
                         {/*<Route path="/select" element={<SelectNFT/>} />*/}
                         <Route path="/invite/:code" element={<Invitation />} />
+                        <Route path="/matched" element={<MintMatched/>} />
                         <Route path="/nft" element={<NFT/>} />
+
                     </Routes>
                     </AccountContext.Provider>
                 </Content>

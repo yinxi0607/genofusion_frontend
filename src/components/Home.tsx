@@ -90,9 +90,9 @@ const Home: React.FC = () => {
                                 color: '#fff',
                                 border: 'none',
                                 borderRadius: '5px',
-                                width: '80%',
-                                height: '70%',
-                                fontSize: '30px',
+                                width: '15vw',
+                                height: '5vh',
+                                fontSize: '1.5vw',
                                 // marginLeft: '-40%',
                                 // padding: '5px 10px',
                             }}/>
@@ -107,10 +107,10 @@ const Home: React.FC = () => {
                             color: '#fff',
                             border: 'none',
                             borderRadius: '5px',
-                            width: '180%',
-                            height: '150%',
-                            fontSize: '30px',
-                            marginLeft: '-40%',
+                            width: '15vw',
+                            height: '5vh',
+                            fontSize: '1.5vw',
+                            // marginLeft: '-40%',
                             // padding: '5px 10px',
 
                         }}/>

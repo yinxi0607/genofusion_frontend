@@ -140,7 +140,7 @@ export async function connectMetaMask(expiretAt:number,contractSign: string, pro
         console.log("signature:",signature)
         console.log("contractSign:",contractSign)
         const result = await contractGenofusion.mint(mintParams, fusion_index, signature,contractSign, {
-            value: ethers.utils.parseEther("0.01"),
+            value: ethers.utils.parseEther("0"),
             gasLimit: 5000000
         })
         console.log('result', result)

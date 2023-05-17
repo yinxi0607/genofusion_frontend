@@ -1,9 +1,10 @@
 import React, {useEffect, useState} from 'react';
 import {Row, Col, Button, List} from 'antd';
-import {Link, useNavigate} from 'react-router-dom';
+import {useNavigate} from 'react-router-dom';
 import axios from 'axios';
+import mint1 from '../assets/mint1.png';
 
-interface SalesInfo {
+export interface SalesInfo {
     contract_address: string;
     collection_size: string;
     end_timestamp: string;
@@ -30,26 +31,48 @@ export interface MintInvitationProps {
 
 interface ListItemProps {
     tokenImage: string;
-    link: string;
+    code: string;
     contractName: string;
     tokenId: string;
+    contractAddress: string;
+    used: number
 }
 
-const ListItem: React.FC<ListItemProps> = ({tokenImage, link, contractName, tokenId}) => {
+const imageStyle = {
+    width: '10vw',
+    height: '15vh'
+}
+
+const ListItem: React.FC<ListItemProps> = ({tokenImage, code, contractName, tokenId, contractAddress, used}) => {
+    const [imageError, setImageError] = useState(false);
+    const navigate = useNavigate();
+    const handleImageError = () => {
+        setImageError(true);
+    };
+    const handlerLinkClick = () => {
+        // console.log('handlerLinkClick');
+        navigate('/matched', {state: {code, contractName, tokenId, tokenImage, contractAddress}});
+    }
     return (
         <List.Item>
-            <Link to={link} style={{
+            {/*{used === 1 ? (<div style={{color: 'red'}}>已使用</div>) : (<div style={{color: 'green'}}>未使用</div>)}*/}
+            <a onClick={handlerLinkClick} style={{
                 display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center'
             }}>
                 <div>
-                    <img src={tokenImage} style={{
-                        width: '100%',
-                    }}/>
+                    {imageError ? (<img src={mint1} style={imageStyle}/>) : (
+                        <img src={tokenImage} style={imageStyle} onError={handleImageError}/>)}
                 </div>
-                <div style={{ marginTop: '20%', fontSize: '20px',marginLeft:"10px" }}>{contractName} #{tokenId}
+                <div style={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center',marginLeft:'2vw'
+                }}>
+                    <div style={{marginTop: '10%', fontSize: '1.2vw', marginLeft: "10px"}}>{contractName} #{tokenId}</div>
+                    <div style={{marginTop: '10%', fontSize: '1.2vw', marginLeft: "10px"}}>Status: {used===1?("Matched"):("Minted")}</div>
                 </div>
-            </Link>
+
+            </a>
         </List.Item>
+
     );
 };
 
@@ -86,7 +109,7 @@ const MintInvitation: React.FC<MintInvitationProps> = ({allInvitationLinks}) => 
 
     return (
         <div style={{
-            marginTop: '8%',
+            marginTop: '5vh',
         }}>
             <Row
                 align="middle"
@@ -97,9 +120,9 @@ const MintInvitation: React.FC<MintInvitationProps> = ({allInvitationLinks}) => 
                     paddingBottom: 'calc(100%/20)',
                 }}
             >
-                <Col xs={40} md={4}>
+                <Col xs={24} md={6}>
                     <div style={{
-                        fontSize: '200%',
+                        fontSize: '1vw',
                         color: '#913E21',
                     }}>
                         <h1>
@@ -111,7 +134,7 @@ const MintInvitation: React.FC<MintInvitationProps> = ({allInvitationLinks}) => 
                     <div style={{
                         marginTop: '20%',
                         alignItems: 'initial',
-                        fontSize: '160%',
+                        fontSize: '0.9vw',
                         color: '#913E21',
                     }}>
                         <p>
@@ -120,7 +143,7 @@ const MintInvitation: React.FC<MintInvitationProps> = ({allInvitationLinks}) => 
                     </div>
                     <div style={{
                         marginTop: '10%',
-                        fontSize: '160%',
+                        fontSize: '0.9vw',
                         color: '#913E21',
                     }}>
                         <p>
@@ -129,7 +152,7 @@ const MintInvitation: React.FC<MintInvitationProps> = ({allInvitationLinks}) => 
                     </div>
                     <div style={{
                         marginTop: '25%',
-                        fontSize: '160%',
+                        fontSize: '0.9vw',
                         color: '#913E21',
                     }}>
                         <Button type="primary" onClick={() => navigate('/mint', {
@@ -141,7 +164,7 @@ const MintInvitation: React.FC<MintInvitationProps> = ({allInvitationLinks}) => 
                         </Button>
                     </div>
                 </Col>
-                <Col xs={40} md={4}>
+                <Col xs={24} md={6}>
 
                     <List
 
@@ -154,28 +177,14 @@ const MintInvitation: React.FC<MintInvitationProps> = ({allInvitationLinks}) => 
                         bordered={true}
 
                         renderItem={(item, index) => (
-                            // <List.Item style={{
-                            //     border: '1px solid #913E21',
-                            //     margin: '3%',
-                            //     width: '100%',
-                            // }}>
-                            //     {/*<div style={{*/}
-                            //     {/*    display: 'flex',*/}
-                            //     {/*    flexDirection: 'column',*/}
-                            //     {/*    alignItems: 'center',*/}
-                            //     {/*    justifyContent: 'center',*/}
-                            //     {/*    width: '50%',*/}
-                            //     {/*}}>*/}
-                            //     {/*    <img src={item.initiator_image} style={{*/}
-                            //     {/*        width: '100%',*/}
-                            //     {/*    }}/>*/}
-                            //     {/*</div>*/}
-                            //     {/*<div style={{}}>*/}
-                            //     {/*    {item.contract_name} #{item.initiator_token_id}*/}
-                            //     {/*</div>*/}
-                            // </List.Item>
-                            <ListItem tokenId={item.initiator_token_id} link={item.initiator_image}
-                                      contractName={item.contract_name} tokenImage={item.initiator_image}/>
+                            <ListItem
+                                tokenId={item.initiator_token_id}
+                                code={item.invite_link}
+                                contractName={item.contract_name}
+                                tokenImage={item.initiator_image}
+                                contractAddress={item.initiator_contract_address}
+                                used={item.used}
+                            />
                         )}
                     />
                 </Col>
