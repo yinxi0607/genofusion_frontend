@@ -10,6 +10,7 @@ import {SalesInfo} from "./MintInvitation";
 import ConnectButton from "./ConnectButton";
 import {connectMetaMask} from "../util";
 import {useAccountContext} from "../contexts/AccountContext";
+import {divideByTenToEighteen} from "./Mint";
 
 
 const MintMatched: React.FC = () => {
@@ -128,7 +129,7 @@ const MintMatched: React.FC = () => {
                         color: '#913E21',
                     }}>
                         <p>
-                            Price: FREE
+                            Price: {salesInfo ? salesInfo.price=="0"?"free":divideByTenToEighteen(Number(salesInfo.price)) : ''}
                         </p>
                     </div>
                 </Col>

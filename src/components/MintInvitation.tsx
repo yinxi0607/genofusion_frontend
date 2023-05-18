@@ -3,6 +3,7 @@ import {Row, Col, Button, List} from 'antd';
 import {useNavigate} from 'react-router-dom';
 import axios from 'axios';
 import mint1 from '../assets/mint1.png';
+import {divideByTenToEighteen} from "./Mint";
 
 export interface SalesInfo {
     contract_address: string;
@@ -147,7 +148,7 @@ const MintInvitation: React.FC<MintInvitationProps> = ({allInvitationLinks}) => 
                         color: '#913E21',
                     }}>
                         <p>
-                            Price: FREE
+                            Price: {salesInfo ? salesInfo.price=="0"?"free":divideByTenToEighteen(Number(salesInfo.price)) : ''}
                         </p>
                     </div>
                     <div style={{

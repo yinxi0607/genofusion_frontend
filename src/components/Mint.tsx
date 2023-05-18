@@ -42,7 +42,7 @@ const popoverStyle: React.CSSProperties = {
     transform: 'translate(-50%, -50%)',
 };
 
-function divideByTenToEighteen(number: number): string {
+export function divideByTenToEighteen(number: number): string {
     const numberBigInt = BigInt(Math.floor(number * 1e14));
     const dividerBigInt = BigInt(10) ** BigInt(18);
     const resultBigInt = numberBigInt / dividerBigInt;
@@ -307,7 +307,7 @@ const Mint: React.FC = () => {
                         <Title level={4}>
                             Stock: {salesInfo?.sold}/ {salesInfo?.collection_size}
                         </Title>
-                        <Text>Price: {salesInfo ? divideByTenToEighteen(Number(salesInfo.price)) : ''}</Text>
+                        <Text>Price: {salesInfo ? salesInfo.price=="0"?"free":divideByTenToEighteen(Number(salesInfo.price)) : ''}</Text>
                     </div>
                     <div style={{textAlign: 'center', marginTop: 10, marginBottom: '10%'}}>
                         {invitationNftData && selectedCard ? (
