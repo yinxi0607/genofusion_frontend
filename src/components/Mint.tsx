@@ -42,7 +42,7 @@ const popoverStyle: React.CSSProperties = {
     transform: 'translate(-50%, -50%)',
 };
 
-function divideByTenToEighteen(number: number): string {
+export function divideByTenToEighteen(number: number): string {
     const numberBigInt = BigInt(Math.floor(number * 1e14));
     const dividerBigInt = BigInt(10) ** BigInt(18);
     const resultBigInt = numberBigInt / dividerBigInt;
