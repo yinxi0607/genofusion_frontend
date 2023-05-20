@@ -41,7 +41,7 @@ interface ListItemProps {
 
 const imageStyle = {
     width: '10vw',
-    height: '13vh'
+    height: '18vh'
 }
 
 const ListItem: React.FC<ListItemProps> = ({tokenImage, code, contractName, tokenId, contractAddress, used}) => {
