@@ -1,7 +1,6 @@
 // src/components/Home.tsx
-import React, { useState, useEffect } from 'react';
-import {Button, Image, message} from 'antd';
-import { Web3Provider, JsonRpcSigner } from '@ethersproject/providers';
+import React, {useEffect } from 'react';
+import {Image, message} from 'antd';
 import {useAccountContext} from "../contexts/AccountContext";
 import {useLocation,useNavigate} from "react-router-dom";
 import ConnectButton from "./ConnectButton";
@@ -19,6 +18,21 @@ const Home: React.FC = () => {
         if (!window.ethereum) {
             alert('请先安装MetaMask!');
             return;
+        }
+        const networkId = await window.ethereum.request({ method: 'net_version' });
+        console.log("networkId",networkId)
+        if (networkId !== process.env.REACT_APP_API_NETWORK) {
+            try {
+                await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: process.env.REACT_APP_API_NETWORK_VERSION }], // 以太坊主网的chain ID是0x1
+                    // params: [{ chainId:  }], // 以太坊主网的chain ID是0x1
+                });
+            } catch (error) {
+                // 用户拒绝了切换网络
+                alert('Please switch to '+process.env.REACT_APP_API_NETWORK_NAME);
+                return;
+            }
         }
 
         const [selectedAccount] = await window.ethereum.request({ method: 'eth_requestAccounts' });

@@ -17,7 +17,8 @@ const Invitation: React.FC = () => {
     const [invitationNftData, setNftData] = useState<NFTData | undefined>(undefined);
     const [invitationAccount, setInvitationAccount] = useState<InvitationAccount | undefined>(undefined);
     const handleStartMinting = () => {
-        navigate('/mint', { state: { invitationNftData, invitationAccount } });
+        const startNewOne = true
+        navigate('/mint', { state: { invitationNftData, invitationAccount, startNewOne } });
     };
 
     useEffect(() => {

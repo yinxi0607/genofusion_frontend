@@ -1,10 +1,9 @@
 // src/components/Invitation.tsx
 
 import React, { useState, useEffect } from 'react';
-import {Row, Col, Image, Button} from 'antd';
-import { useLocation,useNavigate,useParams } from 'react-router-dom';
+import {Row, Col, Image} from 'antd';
+import { useLocation} from 'react-router-dom';
 import axios from 'axios';
-import {InvitationAccount, NFTData} from './SelectNFT';
 import rectangleImage1 from '../assets/mint1.png';
 import {SalesInfo} from "./MintInvitation";
 import ConnectButton from "./ConnectButton";
@@ -14,9 +13,8 @@ import {divideByTenToEighteen} from "./Mint";
 
 
 const MintMatched: React.FC = () => {
-    const { account, setAccount } = useAccountContext();
+    const { account} = useAccountContext();
     const location = useLocation();
-    const navigate = useNavigate();
     const tokenImage = location.state?.tokenImage as string | undefined;
     const tokenId = location.state?.tokenId as string | undefined;
     const contractName = location.state?.contractName as string | undefined;
@@ -71,9 +69,9 @@ const MintMatched: React.FC = () => {
                     const contractSign = await axios.post(process.env.REACT_APP_API_BASE_URL + '/api/v1/sign', backendSignParams)
                     console.log("contractSign", contractSign)
                     console.log("contractAddress", contractAddress)
-                    if (contractSign.data.code === 200 && contractAddress) {
+                    if (contractSign.data.code === 200 && contractAddress && salesInfo) {
                         console.log("contractSign.data.data", contractSign.data.data)
-                        await connectMetaMask(expiretAt, contractSign.data.data, contractAddress, Number(tokenId), account, response_fusion_index.data.data.fusion_index);
+                        await connectMetaMask(expiretAt, contractSign.data.data, contractAddress, Number(tokenId), account, response_fusion_index.data.data.fusion_index,salesInfo.price);
                     }
 
                 } else {
@@ -129,7 +127,7 @@ const MintMatched: React.FC = () => {
                         color: '#913E21',
                     }}>
                         <p>
-                            Price: {salesInfo ? salesInfo.price=="0"?"free":divideByTenToEighteen(Number(salesInfo.price)) : ''}
+                            Price: {salesInfo ? salesInfo.price==="0"?"free":divideByTenToEighteen(Number(salesInfo.price)) : ''}
                         </p>
                     </div>
                 </Col>

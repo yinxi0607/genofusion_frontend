@@ -121,7 +121,7 @@ async function eip712Signature(signer: JsonRpcSigner, proposerContractAddress: s
     }
 }
 
-export async function connectMetaMask(expiretAt:number,contractSign: string, proposerContractAddress: string, proposerTokenId: number, account: string, fusion_index: number) {
+export async function connectMetaMask(expiretAt:number,contractSign: string, proposerContractAddress: string, proposerTokenId: number, account: string, fusion_index: number,price:string) {
     try {
         await window.ethereum.request({method: "eth_requestAccounts"});
         const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -140,8 +140,8 @@ export async function connectMetaMask(expiretAt:number,contractSign: string, pro
         console.log("signature:",signature)
         console.log("contractSign:",contractSign)
         const result = await contractGenofusion.mint(mintParams, fusion_index, signature,contractSign, {
-            value: ethers.utils.parseEther("0"),
-            gasLimit: 5000000
+            value: ethers.utils.parseEther(price),
+            gasLimit: process.env.REACT_APP_API_GAS_LIMIT
         })
         console.log('result', result)
     } catch (error) {
@@ -150,3 +150,29 @@ export async function connectMetaMask(expiretAt:number,contractSign: string, pro
 }
 
 // connectMetaMask();
+
+export async function connectWallet() :Promise<string>{
+    if (!window.ethereum) {
+        alert('请先安装MetaMask!');
+        return "";
+    }
+    const networkId = await window.ethereum.request({ method: 'net_version' });
+    console.log("networkId",networkId)
+    if (networkId !== process.env.REACT_APP_API_NETWORK) {
+        try {
+            await window.ethereum.request({
+                method: 'wallet_switchEthereumChain',
+                params: [{ chainId: process.env.REACT_APP_API_NETWORK_VERSION }], // 以太坊主网的chain ID是0x1
+                // params: [{ chainId:  }], // 以太坊主网的chain ID是0x1
+            });
+        } catch (error) {
+            // 用户拒绝了切换网络
+            alert('Please switch to '+process.env.REACT_APP_API_NETWORK_NAME);
+            return "";
+        }
+    }
+
+    const [selectedAccount] = await window.ethereum.request({ method: 'eth_requestAccounts' });
+    return selectedAccount;
+
+}
