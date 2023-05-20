@@ -11,17 +11,12 @@ import Invitation from "./components/Invitation";
 import NFT from "./components/NFT";
 import twitterImage from "./assets/twitter1.png";
 import discordImage from "./assets/discord1.png";
-import MintInvitation from "./components/MintInvitation";
 import MintMatched from "./components/MintMatched";
 
 const { Header, Content } = Layout;
 
 const App: React.FC = () => {
     const [account, setAccount] = useState('');
-
-    const disconnectWallet = () => {
-        setAccount('');
-    };
 
     return (
         <Router>

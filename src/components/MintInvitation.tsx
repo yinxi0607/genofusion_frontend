@@ -41,7 +41,7 @@ interface ListItemProps {
 
 const imageStyle = {
     width: '10vw',
-    height: '15vh'
+    height: '13vh'
 }
 
 const ListItem: React.FC<ListItemProps> = ({tokenImage, code, contractName, tokenId, contractAddress, used}) => {
@@ -52,17 +52,28 @@ const ListItem: React.FC<ListItemProps> = ({tokenImage, code, contractName, toke
     };
     const handlerLinkClick = () => {
         // console.log('handlerLinkClick');
-        navigate('/matched', {state: {code, contractName, tokenId, tokenImage, contractAddress}});
+        if (used===0){
+            navigate('/mint', {state: {code, contractName, tokenId, tokenImage, contractAddress}});
+        }
+        if (used===2){
+            alert("The invitation link has already been used, please use another one")
+            return
+        }else if (used===1){
+            navigate('/matched', {state: {code, contractName, tokenId, tokenImage, contractAddress}});
+        }else{
+            alert("error")
+            return;
+        }
     }
     return (
         <List.Item>
             {/*{used === 1 ? (<div style={{color: 'red'}}>已使用</div>) : (<div style={{color: 'green'}}>未使用</div>)}*/}
-            <a onClick={handlerLinkClick} style={{
+            <div onClick={handlerLinkClick} style={{
                 display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center'
             }}>
                 <div>
-                    {imageError ? (<img src={mint1} style={imageStyle}/>) : (
-                        <img src={tokenImage} style={imageStyle} onError={handleImageError}/>)}
+                    {imageError ? (<img src={mint1} alt={"token"} style={imageStyle}/>) : (
+                        <img src={tokenImage} style={imageStyle} alt={"token"} onError={handleImageError}/>)}
                 </div>
                 <div style={{
                     display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center',marginLeft:'2vw'
@@ -71,7 +82,7 @@ const ListItem: React.FC<ListItemProps> = ({tokenImage, code, contractName, toke
                     <div style={{marginTop: '10%', fontSize: '1.2vw', marginLeft: "10px"}}>Status: {used===1?("Matched"):("Minted")}</div>
                 </div>
 
-            </a>
+            </div>
         </List.Item>
 
     );
@@ -148,7 +159,7 @@ const MintInvitation: React.FC<MintInvitationProps> = ({allInvitationLinks}) => 
                         color: '#913E21',
                     }}>
                         <p>
-                            Price: {salesInfo ? salesInfo.price=="0"?"free":divideByTenToEighteen(Number(salesInfo.price)) : ''}
+                            Price: {salesInfo ? salesInfo.price==="0"?"free":divideByTenToEighteen(Number(salesInfo.price)) : ''}
                         </p>
                     </div>
                     <div style={{

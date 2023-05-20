@@ -5,9 +5,10 @@ import {useNavigate, useLocation} from 'react-router-dom';
 import axios from 'axios';
 import SelectNFT, {NFTData} from './SelectNFT';
 import MintInvitation, {MintInvitationInterface} from "./MintInvitation";
-import {connectMetaMask} from "../util";
+import {connectMetaMask,connectWallet} from "../util";
 import mint1 from '../assets/mint1.png';
 import mint2 from '../assets/mint2.png';
+
 
 interface SalesInfo {
     contract_address: string;
@@ -21,25 +22,27 @@ interface SalesInfo {
 
 
 const popoverContentStyle = {
-    // width: window.innerWidth * 0.6 + 'px',
-    // height: window.innerHeight * 0.6 + 'px',
     width: '60vw',
     height: '60vh',
     background: '#F0DED0',
     overflow: 'auto',
+    padding:'1vw',
 };
 
 const popoverWrapperStyle: React.CSSProperties = {
     position: 'relative',
     width: '100%',
     height: '100%',
+    background: '#F0DED0',
 };
+
 
 const popoverStyle: React.CSSProperties = {
     position: 'absolute',
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
+    background: '#F0DED0',
 };
 
 export function divideByTenToEighteen(number: number): string {
@@ -53,7 +56,7 @@ export function divideByTenToEighteen(number: number): string {
 const {Title, Text} = Typography;
 
 const Mint: React.FC = () => {
-    const {account} = useAccountContext();
+    const {account,setAccount} = useAccountContext();
     const navigate = useNavigate();
     const location = useLocation();
     const selectedCard = location.state?.selectedCard as NFTData | undefined;
@@ -72,7 +75,7 @@ const Mint: React.FC = () => {
     useEffect(() => {
         const fetchInvitationLink = async () => {
             console.log("closeClick:", closeClick)
-            if (closeClick == undefined || closeClick == false) {
+            if (closeClick === undefined || closeClick === false) {
                 if (account && selectedCard && !invitationAccount) {
                     try {
                         const response = await axios.post(process.env.REACT_APP_API_BASE_URL + '/api/v1/initiator-invite', {
@@ -83,7 +86,7 @@ const Mint: React.FC = () => {
                         });
                         console.log("fetchInvitationLink response.data", response.data);
                         if (response.data.code === 200) {
-                            setInvitationLink(response.data.data.inviteCode);
+                            setInvitationLink(process.env.REACT_APP_API_FRONTEND_URL+"/invite/"+response.data.data.inviteCode);
                         } else {
                             alert(response.data.message);
                         }
@@ -94,7 +97,7 @@ const Mint: React.FC = () => {
             }
         };
         fetchInvitationLink();
-    }, [selectedCard]);
+    }, [selectedCard,account]);
 
     useEffect(() => {
         const fetchSalesInfoData = async () => {
@@ -208,9 +211,10 @@ const Mint: React.FC = () => {
                             }
                             console.log("backendSignParams", backendSignParams)
                             const contractSign = await axios.post(process.env.REACT_APP_API_BASE_URL + '/api/v1/sign', backendSignParams)
-                            if (contractSign.data.code === 200) {
+                            if (contractSign.data.code === 200 && salesInfo) {
                                 console.log("contractSign.data.data", contractSign.data.data)
-                                await connectMetaMask(expiretAt, contractSign.data.data, selectedCard.contract, Number(selectedCard.tokenId), account, response_fusion_index.data.data.fusion_index);
+                                console.log("sales info.price",salesInfo.price)
+                                await connectMetaMask(expiretAt, contractSign.data.data, selectedCard.contract, Number(selectedCard.tokenId), account, response_fusion_index.data.data.fusion_index,salesInfo.price.toString());
                             }
 
                         } else {
@@ -226,6 +230,11 @@ const Mint: React.FC = () => {
             console.error('Mint 错误:', error);
         }
     };
+
+    const handleConnectMetamask = async ()=>{
+        const account:string = await connectWallet()
+        setAccount(account)
+    }
 
     return (
         <div>
@@ -307,55 +316,65 @@ const Mint: React.FC = () => {
                         <Title level={4}>
                             Stock: {salesInfo?.sold}/ {salesInfo?.collection_size}
                         </Title>
-                        <Text>Price: {salesInfo ? salesInfo.price=="0"?"free":divideByTenToEighteen(Number(salesInfo.price)) : ''}</Text>
+                        <Text>Price: {salesInfo ? salesInfo.price==="0"?"free":divideByTenToEighteen(Number(salesInfo.price)) : ''}</Text>
                     </div>
                     <div style={{textAlign: 'center', marginTop: 10, marginBottom: '10%'}}>
-                        {invitationNftData && selectedCard ? (
-                            <Button type="primary" onClick={handleMint}>
-                                mint
-                            </Button>
-                        ) : (
-                            invitationLink ? (
-                                <>
-                                    <label>Invitation link: </label>
-                                    <Mentions readOnly value={invitationLink} placeholder="邀请链接将在这里显示"
-                                              style={{width: '20%'}}/>
-                                    <Button
-                                        type="primary"
-                                        style={{marginTop: 8}}
-                                        onClick={() => {
-                                            navigator.clipboard.writeText(invitationLink || '');
-                                            message.success('邀请链接已复制到剪贴板');
-                                        }}
-                                    >
-                                        复制邀请链接
-                                    </Button>
-                                </>
-                            ) : (
-                                <div style={popoverWrapperStyle}>
-
-
-                                    <Popover
-                                        content={
-
-                                            <div style={popoverContentStyle}>
-                                                <SelectNFT onSelect={handleSelectNFTButtonClick}/>
-                                            </div>
-                                        }
-                                        // title="选择一个 NFT"
-                                        trigger="click"
-                                        visible={popoverVisible}
-                                        onVisibleChange={setPopoverVisible}
-                                        // placement="top"
-                                        transitionName=""
-                                        overlayStyle={popoverStyle}
-                                    >
-                                        <Button type="primary" onClick={handlePopoverClick}>
-                                            Select Your NFT
+                        {
+                            !account?(
+                                <Button type="primary" onClick={handleConnectMetamask}>
+                                    ConnectMetamask
+                                </Button>
+                            ):(
+                                <div>
+                                    {invitationNftData && selectedCard ? (
+                                        <Button type="primary" onClick={handleMint}>
+                                            mint
                                         </Button>
-                                    </Popover>
+                                    ) : (
+                                        invitationLink ? (
+                                            <>
+                                                <label>Invitation link: </label>
+                                                <Mentions readOnly value={invitationLink} placeholder="邀请链接将在这里显示"
+                                                          style={{width: '20%'}}/>
+                                                <Button
+                                                    type="primary"
+                                                    style={{marginTop: 8}}
+                                                    onClick={() => {
+                                                        navigator.clipboard.writeText(invitationLink || '');
+                                                        message.success('邀请链接已复制到剪贴板');
+                                                    }}
+                                                >
+                                                    复制邀请链接
+                                                </Button>
+                                            </>
+                                        ) : (
+                                            <div style={popoverWrapperStyle}>
+                                                <Popover
+                                                    content={
+
+                                                        <div style={popoverContentStyle}>
+                                                            <SelectNFT onSelect={handleSelectNFTButtonClick}/>
+                                                        </div>
+                                                    }
+                                                    // title="选择一个 NFT"
+                                                    trigger="click"
+                                                    visible={popoverVisible}
+                                                    onVisibleChange={setPopoverVisible}
+                                                    // placement="top"
+                                                    transitionName=""
+                                                    overlayStyle={popoverStyle}
+                                                >
+                                                    <Button type="primary" onClick={handlePopoverClick}>
+                                                        Select Your NFT
+                                                    </Button>
+                                                </Popover>
+                                            </div>
+                                        ))}
                                 </div>
-                            ))}
+                            )
+                        }
+
+
                     </div>
                 </div>
             )}

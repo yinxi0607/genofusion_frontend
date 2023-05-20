@@ -1,13 +1,12 @@
 // src/components/Invitation.tsx
 
-import React, {useState, useEffect} from 'react';
-import {Row, Col, Image, Button} from 'antd';
-import {useLocation, useNavigate} from 'react-router-dom';
+import React from 'react';
+import { Image, Button} from 'antd';
+import {useNavigate} from 'react-router-dom';
 import eggImage from "../assets/egg.jpg";
 
 
 const NFT: React.FC = () => {
-    const location = useLocation();
     const navigate = useNavigate();
     const tokenId = "#001";
     const handlerBackToHome = () => {
