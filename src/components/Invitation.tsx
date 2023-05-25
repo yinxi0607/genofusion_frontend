@@ -134,7 +134,7 @@ const Invitation: React.FC = () => {
                                 <div>
                                     <p>{invitationNftData.name} #{invitationNftData.tokenId.toString().padEnd(5, "0")}</p>
                                 </div>
-                                {invitationNftData?.used === 1 ?(
+                                {invitationNftData?.used !== 2 ?(
                                     <div>
                                         <div style={{
                                             marginTop: '3vh',
