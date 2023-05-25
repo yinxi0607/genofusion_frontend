@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {Row, Col, Typography, Button, Image, Mentions, message, Popover} from 'antd';
+import {Row, Col, Typography, Button, Image, Mentions, message, Popover, notification} from 'antd';
 import {useAccountContext} from '../contexts/AccountContext';
 import {useNavigate, useLocation} from 'react-router-dom';
 import axios from 'axios';
@@ -10,7 +10,7 @@ import mint1 from '../assets/mint1.png';
 import mint2 from '../assets/mint2.png';
 
 
-interface SalesInfo {
+export interface SalesInfo {
     contract_address: string;
     collection_size: string;
     end_timestamp: string;
@@ -55,15 +55,23 @@ export function divideByTenToEighteen(number: number): string {
 
 const {Title, Text} = Typography;
 
+type NotificationType = 'success' | 'info' | 'warning' | 'error';
+
+
 const Mint: React.FC = () => {
     const {account,setAccount} = useAccountContext();
     const navigate = useNavigate();
     const location = useLocation();
     const selectedCard = location.state?.selectedCard as NFTData | undefined;
+    // console.log("Mint selectedCard",selectedCard)
     const invitationAccount = location.state?.invitationAccount as string | undefined;
     const invitationNftData = location.state?.invitationNftData as NFTData | undefined;
+    // console.log("Mint invitationNftData",invitationNftData)
     const startNewOne = location.state?.startNewOne as boolean | undefined;
+    const invitationLinkCode = location.state?.invitationLinkCode as string |undefined;
     const closeClick = location.state?.closeClick as boolean | undefined;
+
+    const [mintButtonDisable, setMintButtonDisable] = useState(false);
 
     const [invitationLink, setInvitationLink] = useState<string | undefined>(undefined);
     const [salesInfo, setSalesInfo] = useState<SalesInfo | undefined>(undefined);
@@ -75,14 +83,16 @@ const Mint: React.FC = () => {
     useEffect(() => {
         const fetchInvitationLink = async () => {
             console.log("closeClick:", closeClick)
+            console.log("invitationLinkCode",invitationLinkCode)
             if (closeClick === undefined || closeClick === false) {
-                if (account && selectedCard && !invitationAccount) {
+                if (account && selectedCard && !invitationAccount && !invitationLinkCode) {
                     try {
                         const response = await axios.post(process.env.REACT_APP_API_BASE_URL + '/api/v1/initiator-invite', {
                             "initiator_contract_address": selectedCard.contract,
                             "initiator_account_address": account,
                             "initiator_token_id": String(selectedCard.tokenId),
                             "initiator_image": selectedCard.image,
+                            "initiator_contract_name": selectedCard.name,
                         });
                         console.log("fetchInvitationLink response.data", response.data);
                         if (response.data.code === 200) {
@@ -172,6 +182,16 @@ const Mint: React.FC = () => {
         setPopoverVisible(false);
     };
 
+    const [api, contextHolder] = notification.useNotification();
+
+    const openNotificationWithIcon = (type: NotificationType) => {
+        api[type]({
+            message: 'Minting is almost done',
+            description:
+                'please wait a few seconds for on-chain interaction time.',
+        });
+    };
+
     const handleMint = async () => {
         try {
             // 检查用户是否连接了钱包
@@ -185,10 +205,12 @@ const Mint: React.FC = () => {
                     try {
                         const request1 = axios.put(process.env.REACT_APP_API_BASE_URL + '/api/v1/initiator-invite', {
                             "initiator_contract_address": invitationNftData.contract,
+                            "initiator_contract_name": invitationNftData.name,
                             "initiator_account_address": invitationAccount,
                             "initiator_token_id": String(invitationNftData.tokenId),
                             "initiator_image": invitationNftData.image,
                             "invitee_contract_address": selectedCard.contract,
+                            "invitee_contract_name": selectedCard.name,
                             "invitee_account_address": account,
                             "invitee_token_id": String(selectedCard.tokenId),
                             "invitee_image": selectedCard.image,
@@ -215,6 +237,9 @@ const Mint: React.FC = () => {
                                 console.log("contractSign.data.data", contractSign.data.data)
                                 console.log("sales info.price",salesInfo.price)
                                 await connectMetaMask(expiretAt, contractSign.data.data, selectedCard.contract, Number(selectedCard.tokenId), account, response_fusion_index.data.data.fusion_index,salesInfo.price.toString());
+                                openNotificationWithIcon('success');
+                                // mintButton变灰
+                                setMintButtonDisable(true);
                             }
 
                         } else {
@@ -312,12 +337,7 @@ const Mint: React.FC = () => {
                             />
                         </Col>
                     </Row>
-                    <div style={{textAlign: 'center', marginTop: '-3%'}}>
-                        <Title level={4}>
-                            Stock: {salesInfo?.sold}/ {salesInfo?.collection_size}
-                        </Title>
-                        <Text>Price: {salesInfo ? salesInfo.price==="0"?"free":divideByTenToEighteen(Number(salesInfo.price)) : ''}</Text>
-                    </div>
+
                     <div style={{textAlign: 'center', marginTop: 10, marginBottom: '10%'}}>
                         {
                             !account?(
@@ -327,20 +347,20 @@ const Mint: React.FC = () => {
                             ):(
                                 <div>
                                     {invitationNftData && selectedCard ? (
-                                        <Button type="primary" onClick={handleMint}>
+                                        <Button type="primary" onClick={handleMint} disabled={mintButtonDisable}>
                                             mint
                                         </Button>
                                     ) : (
-                                        invitationLink ? (
+                                        invitationLink||invitationLinkCode ? (
                                             <>
                                                 <label>Invitation link: </label>
-                                                <Mentions readOnly value={invitationLink} placeholder="邀请链接将在这里显示"
+                                                <Mentions readOnly value={invitationLink?invitationLink:invitationLinkCode} placeholder="邀请链接将在这里显示"
                                                           style={{width: '20%'}}/>
                                                 <Button
                                                     type="primary"
                                                     style={{marginTop: 8}}
                                                     onClick={() => {
-                                                        navigator.clipboard.writeText(invitationLink || '');
+                                                        navigator.clipboard.writeText(invitationLink?invitationLink:invitationLinkCode || '');
                                                         message.success('邀请链接已复制到剪贴板');
                                                     }}
                                                 >
