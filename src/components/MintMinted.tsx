@@ -12,7 +12,7 @@ import {useAccountContext} from "../contexts/AccountContext";
 import {divideByTenToEighteen} from "./Mint";
 
 
-const MintMatched: React.FC = () => {
+const MintMinted: React.FC = () => {
     const { account} = useAccountContext();
     const location = useLocation();
     const tokenImage = location.state?.tokenImage as string | undefined;
@@ -188,4 +188,4 @@ const MintMatched: React.FC = () => {
     );
 };
 
-export default MintMatched;
+export default MintMinted;

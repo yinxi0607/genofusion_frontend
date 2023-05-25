@@ -1,9 +1,10 @@
 import React, {useEffect, useState} from 'react';
-import {Row, Col, Button, List} from 'antd';
-import {useNavigate} from 'react-router-dom';
+import {Row, Col, Button, List, Card, Space} from 'antd';
+import {Link, useNavigate} from 'react-router-dom';
 import axios from 'axios';
 import mint1 from '../assets/mint1.png';
 import {divideByTenToEighteen} from "./Mint";
+import {NFTData} from "./SelectNFT";
 
 export interface SalesInfo {
     contract_address: string;
@@ -22,7 +23,7 @@ export interface MintInvitationInterface {
     "initiator_account_address": string,
     "initiator_token_id": string,
     "initiator_image": string,
-    "contract_name": string
+    "initiator_contract_name": string
 }
 
 
@@ -50,17 +51,51 @@ const ListItem: React.FC<ListItemProps> = ({tokenImage, code, contractName, toke
     const handleImageError = () => {
         setImageError(true);
     };
-    const handlerLinkClick = () => {
-        // console.log('handlerLinkClick');
-        if (used===0){
-            navigate('/mint', {state: {code, contractName, tokenId, tokenImage, contractAddress}});
-        }
-        if (used===2){
+    const handlerLinkClick = async () => {
+        console.log('handlerLinkClick,used:', used);
+        const startNewOne = true
+        if (used === 0) {
+            let selectedCard = {
+                contract: contractAddress,
+                tokenId: tokenId,
+                image: tokenImage,
+                name: contractName,
+                used: 0
+            }
+            const invitationLinkCode = process.env.REACT_APP_API_FRONTEND_URL + `/invite/${code}`
+            navigate('/mint', {state: {selectedCard, invitationLinkCode, startNewOne}});
+        } else if (used === 2) {
             alert("The invitation link has already been used, please use another one")
             return
-        }else if (used===1){
-            navigate('/matched', {state: {code, contractName, tokenId, tokenImage, contractAddress}});
-        }else{
+        } else if (used === 1) {
+            const response = await axios.get(
+                `${process.env.REACT_APP_API_BASE_URL}/api/v1/initiator-invite/${code}`
+            );
+            console.log("initiator-invite response.data", response.data)
+            if (response.data.code === 200) {
+                const responseData = response.data.data
+                let selectedCard = {
+                    contract: responseData.initiator_contract_address,
+                    tokenId: responseData.initiator_token_id,
+                    image: responseData.initiator_image,
+                    name: responseData.initiator_contract_name,
+                    used: 1
+                }
+                let invitationNftData = {
+                    contract: responseData.invitee_contract_address,
+                    tokenId: responseData.invitee_token_id,
+                    image: responseData.invitee_image,
+                    name: responseData.invitee_contract_name,
+                    used: 1
+                }
+                const invitationAccount = responseData.invitee_account_address
+                console.log("get initiator invite response.data.data", response.data.data)
+                navigate('/mint', {state: {invitationNftData,selectedCard,invitationAccount, startNewOne}});
+            } else {
+                alert("error")
+                return;
+            }
+        } else {
             alert("error")
             return;
         }
@@ -68,21 +103,25 @@ const ListItem: React.FC<ListItemProps> = ({tokenImage, code, contractName, toke
     return (
         <List.Item>
             {/*{used === 1 ? (<div style={{color: 'red'}}>已使用</div>) : (<div style={{color: 'green'}}>未使用</div>)}*/}
-            <div onClick={handlerLinkClick} style={{
-                display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center'
+            <a onClick={handlerLinkClick} style={{
+                display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center',pointerEvents:used===2?"none":"auto"
             }}>
                 <div>
                     {imageError ? (<img src={mint1} alt={"token"} style={imageStyle}/>) : (
-                        <img src={tokenImage} style={imageStyle} alt={"token"} onError={handleImageError}/>)}
+                        <img src={tokenImage.replace('ipfs://', 'https://ipfs.io/ipfs/')} style={imageStyle} alt={"token"} onError={handleImageError}/>)}
                 </div>
                 <div style={{
                     display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center',marginLeft:'2vw'
                 }}>
-                    <div style={{marginTop: '10%', fontSize: '1.2vw', marginLeft: "10px"}}>{contractName} #{tokenId}</div>
-                    <div style={{marginTop: '10%', fontSize: '1.2vw', marginLeft: "10px"}}>Status: {used===1?("Matched"):("Minted")}</div>
+                    <div style={{marginTop: '10%', fontSize: '1.2vw', marginLeft: "10px"}}>{contractName} #{tokenId.toString().padStart(5,'0')}</div>
+                    <div style={{marginTop: '10%', fontSize: '1.2vw', marginLeft: "10px", display:"flex"}}>
+                        <div style={{padding:'0.5vw'}}>Status:</div>
+                        <div style={{padding:'0.5vw',marginLeft:'1vw',borderRadius:'5px',background:used === 1 ? 'rgba(11, 142, 0, 0.3)' : used === 2 ? 'rgba(174, 136, 123, 0.5)' : 'rgba(85, 85, 85, 0.3)'}}> {used===1?("Matched"):(used===2? "Minted":"Waiting")}</div>
+                    </div>
+
                 </div>
 
-            </div>
+            </a>
         </List.Item>
 
     );
@@ -159,7 +198,7 @@ const MintInvitation: React.FC<MintInvitationProps> = ({allInvitationLinks}) => 
                         color: '#913E21',
                     }}>
                         <p>
-                            Price: {salesInfo ? salesInfo.price==="0"?"free":divideByTenToEighteen(Number(salesInfo.price)) : ''}
+                            Price: {salesInfo ? salesInfo.price.toString()==="0"?"Free":divideByTenToEighteen(Number(salesInfo.price)) : ''}
                         </p>
                     </div>
                     <div style={{
@@ -176,8 +215,8 @@ const MintInvitation: React.FC<MintInvitationProps> = ({allInvitationLinks}) => 
                         </Button>
                     </div>
                 </Col>
-                <Col xs={24} md={6}>
-
+                <Col xs={24} md={10}>
+                    <Space direction="vertical" size="middle" style={{width: '100%'}}>
                     <List
 
                         pagination={{
@@ -192,13 +231,14 @@ const MintInvitation: React.FC<MintInvitationProps> = ({allInvitationLinks}) => 
                             <ListItem
                                 tokenId={item.initiator_token_id}
                                 code={item.invite_link}
-                                contractName={item.contract_name}
+                                contractName={item.initiator_contract_name}
                                 tokenImage={item.initiator_image}
                                 contractAddress={item.initiator_contract_address}
                                 used={item.used}
                             />
                         )}
                     />
+                    </Space>
                 </Col>
             </Row>
 
