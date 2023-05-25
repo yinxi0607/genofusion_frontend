@@ -121,7 +121,7 @@ const Invitation: React.FC = () => {
                                     color: '#913E21',
                                 }}>
                                     <p>
-                                        Price: {salesInfo ? salesInfo.price === "0" ? "free" : divideByTenToEighteen(Number(salesInfo.price)) : ''}
+                                        Price: {salesInfo ? salesInfo.price.toString() === "0" ? "Free" : divideByTenToEighteen(Number(salesInfo.price)) : ''}
                                     </p>
                                 </div>
                             </Col>
@@ -131,10 +131,13 @@ const Invitation: React.FC = () => {
                                     alt="Rectangle 1"
                                     style={{width: '15vw', height: 'auto'}}
                                 />
+                                <div>
+                                    <p>{invitationNftData.name} #{invitationNftData.tokenId.toString().padEnd(5, "0")}</p>
+                                </div>
                                 {invitationNftData?.used === 1 ?(
                                     <div>
                                         <div style={{
-                                            marginTop: '-3%',
+                                            marginTop: '3vh',
                                         }}>
                                             {invitationNftData ?
                                                 <div>
@@ -158,7 +161,7 @@ const Invitation: React.FC = () => {
                                 ):(
                                     <div>
                                         <div style={{
-                                            marginTop: '-3%',
+                                            marginTop: '3vh',
                                         }}>
                                             {invitationNftData ?<div>
                                                     <p>{invitationNftData.name} #{invitationNftData.tokenId?.toString().padEnd(5, "0")} has been matched.</p>
@@ -168,8 +171,8 @@ const Invitation: React.FC = () => {
                                                 <p>Invitation link is invalid</p>}
                                         </div>
                                         <div style={{
-                                            marginTop: '2%',
-                                            marginBottom: '15%',
+                                            marginTop: '2vh',
+                                            marginBottom: '2vh',
                                         }}>
                                             <Button type="primary" onClick={handleStartMinting}>
                                                 Start Now
